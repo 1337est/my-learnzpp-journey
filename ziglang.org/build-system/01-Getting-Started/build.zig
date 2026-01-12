@@ -658,4 +658,26 @@ pub fn build(b: *std.Build) void {
     //
     //     return install_artifact;
     // }
+
+    // The below calls a LOT of functions to basically create a Step.Run via the standard
+    // .create methods we've been seeing. I think this just basically adds another dependency
+    // for the build to work, passing in the exe as a compile step. This means that when running,
+    // zig build, it should make sure that it compiles as well before running the exe (this is my
+    // interpretation of what's going on). This is creating the Step.Run.
+    const run_exe = b.addRunArtifact(exe);
+    // _ = &run_exe;
+    // This defined a named run "step", then a description for the step to describe what it does. You
+    // can replace 'run' with 'blahblah' and run the application via 'zig build blahblah' and it
+    // will run the application. If you then type 'zig build --help', you will also see that an
+    // option under "Steps:" having what you wrote here. This is us defining a specific run step
+    // that we can then attach as a dependency for our compilation step.
+    const run_step = b.step("run", "Run the application");
+    // _ = &run_step;
+    // We can say that the run_step we created above, now depends on the compiled executable step
+    // so that we can actually see it when we run zig build --help, but nothing will happen if we
+    // run zig build run, and actually have it work. This is the step that truly "adds" it in.
+    // Try commenting it out and running zig build --help and zig build run. I'm not really sure
+    // how this works and wasn't able to make any sense of it going into the code, but I'm sure
+    // I'll learn how this happens in due time.
+    run_step.dependOn(&run_exe.step);
 }
